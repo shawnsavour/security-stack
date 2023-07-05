@@ -1,0 +1,29 @@
+namespace: production
+provider: cloudflare
+
+#serviceAccount:
+#  name: projectName-main-cluster-external-dns-route53-role
+#  annotations:
+#    eks.amazonaws.com/role-arn: arn:aws:iam::814793340255:role/projectName-main-cluster-external-dns-route53-role
+
+domainFilters:
+  - dentity.com
+
+extraArgs:
+  - --annotation-filter=external-dns.alpha.kubernetes.io/provider in (cloudflare)
+
+policy: sync
+
+logLevel: debug
+
+sources:
+  - service
+  - ingress
+
+nodeSelector:
+  node.kubernetes.io/environment: "production"
+tolerations:
+  - key: "node.kubernetes.io/environment"
+    operator: "Equal"
+    effect: "NoSchedule"
+    value: "production"

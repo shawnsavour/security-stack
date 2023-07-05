@@ -1,0 +1,129 @@
+# custom values for chart
+namespace: vault
+
+# Vault injector
+injector:
+  enabled: true
+  # replicas: 3
+  replicas: 3
+
+  agentDefaults:
+    # For more information on configuring resources, see the K8s documentation:
+    # https://kubernetes.io/docs/concepts/configuration/manage-resources-containers/
+    cpuLimit: "2500m"
+    cpuRequest: "250m"
+    memLimit: "128Mi"
+    memRequest: "128Mi"
+
+  leaderElector:
+    enabled: false
+
+  certs: # cert for injector ha
+    secretName: injector-tls # name of secret
+
+  webhook:
+    # annotations: "cert-manager.io/inject-ca-from: { .Release.Namespace }/injector-certificate"
+    annotations: "cert-manager.io/inject-ca-from: vault/injector-certificate"
+
+  tolerations:
+    - key: "node.kubernetes.io/environment"
+      operator: "Equal"
+      effect: "NoSchedule"
+      value: "development"
+  nodeSelector:
+    node.kubernetes.io/environment: "development"
+  logLevel: "debug"
+
+# Vault Server
+server:
+  ha:
+    enabled: true
+    replicas: 3
+
+    config: |
+      ui = true
+
+      listener "tcp" {
+        tls_disable = 1
+        address = "[::]:8200"
+        cluster_address = "[::]:8201"
+      }
+
+      storage "postgresql" {
+        connection_url = "postgres://vaultmaster:replaceme@postgres.local.dentity.com:5432/vault-master"
+        table="vault_kv_store"
+        ha_enabled="true"
+        ha_table="vault_ha_locks"
+      }
+
+      seal "awskms" {
+        region     = "us-east-2"
+        kms_key_id = "0be46c07-1e77-4b0a-89eb-42b04f0822aa"
+      }
+  
+      service_registration "kubernetes" {}
+
+  # disable because we are using storage with ha (if enable => vault storage data on disk)
+  dataStorage:
+    enabled: false
+
+  ingress:
+    enabled: true
+    annotations:
+      external-dns.alpha.kubernetes.io/provider: aws
+      kubernetes.io/tls-acme: 'true'
+      cert-manager.io/cluster-issuer: letsencrypt-private-resource
+      nginx.ingress.kubernetes.io/force-ssl-redirect: "true"
+      nginx.org/keepalive: "32"
+    ingressClassName: nginx-dev
+    pathType: Prefix
+
+    # When HA mode is enabled and K8s service registration is being used,
+    # configure the ingress to point to the Vault active service.
+    activeService: true
+    hosts:
+      - host: vaults.local.dentity.com
+        paths:
+          - /
+
+    extraPaths: []
+    tls:
+      - hosts:
+          - vaults.local.dentity.com
+        secretName: vaults.local.dentity.com
+
+  extraArgs: "-config=/vault/userconfig/vault-storage-config/config.hcl"
+
+  tolerations:
+    - key: "node.kubernetes.io/environment"
+      operator: "Equal"
+      effect: "NoSchedule"
+      value: "development"
+  nodeSelector:
+    node.kubernetes.io/environment: "development"
+
+  standalone:
+    enabled: false
+
+  volumes:
+    - name: userconfig-vault-storage-config
+      secret:
+        secretName: userconfig-vault-storage-config
+        defaultMode: 420
+
+  volumeMounts:
+    - name: userconfig-vault-storage-config
+      mountPath: /vault/userconfig/vault-storage-config
+      readOnly: true
+
+  serviceAccount:
+    create: true
+    annotations:
+      eks.amazonaws.com/role-arn: arn:aws:iam::814793340255:role/hll-main-cluster-vault-kms
+
+# Vault UI
+ui:
+  enabled: true
+
+# Telemetry => TODO config support monitoring/ tracing
+serverTelemetry: {}

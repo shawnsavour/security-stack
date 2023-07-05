@@ -1,0 +1,5 @@
+creation_rules:
+- path_regex: 'environment/secrets/dev/(.*).yaml'
+  kms: 'arn:aws:kms:us-east-2:123456789:key/d17c0152-aea9-41ba-a36d-f6e640b2ba97'
+- path_regex: 'environment/secrets/stg/(.*).yaml'
+  kms: 'arn:aws:kms:us-east-2:123456789:key/ce2cc4c7-7034-402a-9ba0-61c69b69efe4'

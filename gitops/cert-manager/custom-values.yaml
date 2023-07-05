@@ -1,0 +1,51 @@
+# custom value to configure
+namespace: cert-manager
+installCRDs: true
+
+controller:
+  resources:
+    limits:
+      cpu: 1
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  # nodeSelector:
+  #   node.kubernetes.io/environment: "development"
+  # tolerations:
+  #   - key: "node.kubernetes.io/environment"
+  #     operator: "Equal"
+  #     effect: "NoSchedule"
+  #     value: "development"
+
+webhook:
+  resources:
+    limits:
+      cpu: 1
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  # nodeSelector:
+  #   node.kubernetes.io/environment: "development"
+  # tolerations:
+  #   - key: "node.kubernetes.io/environment"
+  #     operator: "Equal"
+  #     effect: "NoSchedule"
+  #     value: "development"
+
+cainjector:
+  resources:
+    limits:
+      cpu: 1
+      memory: 200Mi
+    requests:
+      cpu: 100m
+      memory: 200Mi
+  # nodeSelector:
+  #   node.kubernetes.io/environment: "development"
+  # tolerations:
+  # - key: "node.kubernetes.io/environment"
+  #   operator: "Equal"
+  #   effect: "NoSchedule"
+  #   value: "development"

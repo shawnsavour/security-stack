@@ -1,0 +1,30 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: test-external-dns-secrets
+  namespace: argocd
+  # finalizers:
+    # - resources-finalizer.argocd.argoproj.io
+spec:
+  destination:
+    name: 'in-cluster'
+    namespace: dev
+  source:
+    repoURL: 'https://github.com/shawnsavour/security-stack.git'
+    path: gitops/argocd-plugins/sops/example/testSops/charts/external-dns
+    targetRevision: HEAD
+    helm:
+      valueFiles:
+        - ../../environment/values/dev/values.yaml
+        # Pattern use helm-secrets
+        - secrets://../../environment/secrets/dev/values-enc.yaml
+      releaseName: test-pj
+      version: v3
+  project: default
+  syncPolicy:
+    automated:
+      selfHeal: true
+      prune: false
+    syncOptions:
+      #create namespace
+      - CreateNamespace=true
